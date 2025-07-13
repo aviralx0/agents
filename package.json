@@ -1,5 +1,5 @@
 {
-  "name": "@pcn/document-retriever-mcp",
+  "name": "document-retriever-mcp",
   "version": "1.0.0",
   "description": "MCP server for retrieving PCN (Project Concept Note) documents by ID",
   "type": "module",
