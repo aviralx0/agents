@@ -1,0 +1,36 @@
+{
+  "name": "@pcn/document-retriever-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for retrieving PCN (Project Concept Note) documents by ID",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "document-retriever-mcp": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "zod": "^3.23.8"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "llm",
+    "document-retrieval",
+    "pcn",
+    "project-concept-note"
+  ],
+  "author": "PCN Document System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifad/agents_demo.git"
+  }
+} 
