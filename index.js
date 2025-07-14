@@ -131,13 +131,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'DocumentRetrieverByProjectID',
-        description: 'Retrieves project document content by project ID',
+        description: 'Retrieves project document content by project ID. Example usage: Call with {"projectId": "2000004677"} to get the document for project 2000004677.',
         inputSchema: {
           type: 'object',
           properties: {
             projectId: {
               type: 'string',
-              description: 'The project ID (e.g., 2000004677)',
+              description: 'The project ID as a string (e.g., "2000004677")',
             },
           },
           required: ['projectId'],
