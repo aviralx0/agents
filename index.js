@@ -152,7 +152,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   if (name === 'DocumentRetrieverByProjectID') {
-    const projectId = args.projectId;
+    const projectId = args.projectId?.trim();
     
     if (!projectId) {
       throw new Error('Project ID is required');
