@@ -394,22 +394,36 @@ End of Project Document for ${document.projectName} (Project ID: ${document.proj
     }
 
     try {
-      // Construct the file path
-      const filePath = path.join('cosop', `${country}.md`);
+      // Construct the GitHub raw URL
+      const baseUrl = 'https://raw.githubusercontent.com/aviralx0/agents/main/cosop';
+      const url = `${baseUrl}/${country}.md`;
       
-      // Check if file exists and read it
-      if (!fs.existsSync(filePath)) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: No COSOP document found for country: ${args.country}. Please check if the file exists at cosop/${country}.md`,
-            },
-          ],
-        };
+      // Fetch the document from GitHub
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: No COSOP document found for country: ${args.country}. The file ${country}.md does not exist in the repository.`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error fetching COSOP document for ${args.country}: ${response.status} ${response.statusText}`,
+              },
+            ],
+          };
+        }
       }
 
-      const cosopContent = fs.readFileSync(filePath, 'utf8');
+      const cosopContent = await response.text();
       
       // Format the response with pretext and separators
       const formattedResponse = `=====
@@ -435,7 +449,7 @@ End of COSOP document for ${args.country}
         content: [
           {
             type: 'text',
-            text: `Error reading COSOP document for ${args.country}: ${error.message}`,
+            text: `Error fetching COSOP document for ${args.country}: ${error.message}`,
           },
         ],
       };
@@ -619,53 +633,42 @@ End of Project Document for ${document.projectName} (Project ID: ${document.proj
 
   if (name === 'GuidelineRetriever') {
     try {
-      const guidelinesDir = path.join('guidelines');
-      
-      // Check if guidelines directory exists
-      if (!fs.existsSync(guidelinesDir)) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Error: Guidelines directory not found.',
-            },
-          ],
-        };
-      }
+      const baseUrl = 'https://raw.githubusercontent.com/aviralx0/agents/main/guidelines';
+      const guidelineFiles = [
+        'IFAD_Strategic_Framework_2016_to_2025.md',
+        'IFAD_Targeting_Guidelines.md',
+        'UN_Cooperation_Framework_Internal_Guidance.md',
+        '2017_UNDAF_Guidance.md'
+      ];
 
-      // Read all .md files from guidelines directory
-      const files = fs.readdirSync(guidelinesDir).filter(file => file.endsWith('.md'));
-      
-      if (files.length === 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Error: No guideline files found in guidelines directory.',
-            },
-          ],
-        };
-      }
-
-      // Read all guideline files and combine them
       let combinedContent = `=====
 These are UN/IFAD guideline documents retrieved from the GuidelineRetriever tool. These are guidelines from the UN that include UNDAF, IFAD Strategic Framework, IFAD Revised Operational Guidelines on Targeting, and UN Cooperation Framework. These documents are very long - try to infer the knowledge relevant from this chunk.
 =====
 
 `;
 
-      files.forEach((file, index) => {
-        const filePath = path.join(guidelinesDir, file);
-        const content = fs.readFileSync(filePath, 'utf8');
-        const fileName = file.replace('.md', '').replace(/_/g, ' ');
-        
-        combinedContent += `
-# ${fileName} Guidelines
+      // Fetch all guideline files from GitHub
+      const fetchPromises = guidelineFiles.map(async (file, index) => {
+        try {
+          const response = await fetch(`${baseUrl}/${file}`);
+          if (!response.ok) {
+            return `# ${file.replace('.md', '').replace(/_/g, ' ')} Guidelines\n\nError: Could not fetch ${file} (${response.status}: ${response.statusText})\n\n`;
+          }
+          const content = await response.text();
+          const fileName = file.replace('.md', '').replace(/_/g, ' ');
+          
+          return `# ${fileName} Guidelines
 
 ${content}
 
-${index < files.length - 1 ? '---\n' : ''}`;
+${index < guidelineFiles.length - 1 ? '---\n' : ''}`;
+        } catch (error) {
+          return `# ${file.replace('.md', '').replace(/_/g, ' ')} Guidelines\n\nError fetching ${file}: ${error.message}\n\n`;
+        }
       });
+
+      const guidelineContents = await Promise.all(fetchPromises);
+      combinedContent += guidelineContents.join('');
 
       combinedContent += `
 =====
@@ -685,7 +688,7 @@ End of all UN/IFAD guidelines documents
         content: [
           {
             type: 'text',
-            text: `Error reading guideline documents: ${error.message}`,
+            text: `Error fetching guideline documents: ${error.message}`,
           },
         ],
       };
